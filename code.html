@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- PWA: Manifesto e Service Worker -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e7d32">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerador de Código de Poda</title>
+  <style>
+    <!--José carlos de abreu souza U340349-->
+    body {
+      font-family: Arial, sans-serif;
+      background: #e6f4ea url('https://www.transparenttextures.com/patterns/green-dust-and-scratches.png');
+      background-size: cover;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 100, 0, 0.2);
+    }
+    h2 {
+      text-align: center;
+      color: #2e7d32;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      color: #1b5e20;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    select, input {
+      border: 1px solid #81c784;
+      border-radius: 5px;
+    }
+    .btns-especiais {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .btns-especiais button, button {
+      background-color: #388e3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+      flex: 1;
+    }
+    .btns-especiais button:hover, button:hover {
+      background-color: #2e7d32;
+    }
+    #resultado {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 18px;
+      color: #1b5e20;
+    }
+    #listaEspecies {
+      display: none;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f0fff4;
+    }
+    #listaEspecies div {
+      padding: 5px;
+      cursor: pointer;
+      border-bottom: 1px solid #c8e6c9;
+    }
+    #listaEspecies div:hover {
+      background-color: #dcedc8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Code Pruning</h2>
+
+  <div class="btns-especiais">
+  <button onclick="setTipoEspecial('T0')">Erradicação</button>
+  <button onclick="setTipoEspecial('T4')">Roço Manual</button>
+  <button onclick="setTipoEspecial('T5')">Roço Mecanizado</button>
+  <button onclick="gerarExpurgo()">Ordem incompleta</button>
+  <button onclick="gerarDistanciaSeguranca()">Não existe poda no local</button>
+</div>
+
+    <label id="lbl-especie">Espécie:</label>
+    <input type="text" id="especie" placeholder="Ex: Ipe" />
+    <button onclick="mostrarLista()">Lista: Espécies de Arvores</button>
+    <div id="listaEspecies"></div>
+
+    <label>Rede:</label>
+    <select id="rede">
+      <option value="MT">MT</option>
+      <option value="BT">BT</option>
+      <option value="AMBOS">BT e MT</option>
+    </select>
+
+    <label>Projeção:</label>
+    <select id="projecao">
+      <option value="P">P (Projetado)</option>
+      <option value="E">E (Entrelaçado)</option>
+      <option value="N">N (Abaixo)</option>
+    </select>
+
+    <label>Quantidade:</label>
+    <input type="number" id="quantidade" placeholder="Ex: 20" />
+
+    <button onclick="gerarCodigo()">Gerar Código</button>
+<button onclick="limparCampos()">Limpar</button>
+
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    const tipos = {
+       "abacateiro": 3, "acacia": 3, "acacia rosa gigante": 2, "agave furcreia": 3,
+    "algaroba": 1, "angico": 1, "aroeira mansa": 1, "arvore de mangue": 1,
+    "arvores fruteiras": 3, "avelos": 1, "azeitona": 1, "bambu": 1,
+    "bananeira": 3, "barauna": 1, "barriguda": 1, "bougainville": 1,
+    "caja": 2, "cajarana": 2, "cajueiro": 2, "canafitola": 3, "cansassão": 2,
+    "caraibeira": 1, "castanhola": 3, "casuarina": 2, "catingueira": 2,
+    "catole": 2, "cedro": 3, "chifre de bode": 3, "coqueiro": 3,
+    "dende": 2, "embauba": 2, "espinheiro": 1, "eucalipto": 1,
+    "favela": 1, "feijao bravo": 3, "figueira": 2, "fixo": 1,
+    "flamboyant": 2, "gameleira": 1, "goiabeira": 3, "imbuzeiro": 1,
+    "ingazeira": 1, "ipe": 2, "jabuticabeira": 3, "jacaranda": 2,
+    "jambo": 2, "jaqueira": 2, "jatoba": 1, "jua": 2, "juazeiro": 1,
+    "jurema": 1, "lacre": 1, "laranjeira": 2, "leucena": 3, "lirio": 3,
+    "macaiba": 1, "mameleiro": 3, "mamoeiro": 3, "mandacaru": 3,
+    "mangueira": 2, "manicoba": 3, "mororo": 3, "mulungu": 1,
+    "murici": 2, "nim": 3, "ninho": 3, "oiti": 2, "oiticica": 1,
+    "oliveira": 2, "pajeu": 2, "palmeira": 3, "palmeira imperial": 1,
+    "palmeira leque": 2, "pata de vaca": 2, "pau brasil": 3,
+    "pau ferro": 1, "pe de agaso": 3, "pe de cola": 1, "pereiro": 3,
+    "piao": 3, "pinheira": 1, "pinho": 2, "pitombeira": 3, "quixabeira": 1,
+    "rama": 3, "roseira": 1, "rama trepadeira": 3, "sabiazeira": 1, "saboneteira": 2,
+    "seriguela": 3, "sete copas africana": 2, "sibipiruna": 1,
+    "sombreiro": 2, "sucupira": 1, "tamarineira": 1, "tamboril": 1,
+    "timbauba": 1, "trapia": 1, "trepadeira": 1, "umbu caja": 2,
+    "umburana": 2, "umbuzeiro": 1
+    };
+
+    let tipoEspecial = null;
+
+    function setTipoEspecial(tipoStr) {
+      tipoEspecial = { "T0": 0, "T4": 4, "T5": 5 }[tipoStr];
+      document.getElementById('especie').value = '';
+      document.getElementById('lbl-especie').style.display = 'none';
+      document.getElementById('especie').style.display = 'none';
+      document.getElementById('projecao').value = 'N';
+    }
+
+    function gerarExpurgo() {
+      document.getElementById('resultado').innerText = "Código gerado: 27_0000#";
+    }
+
+    function gerarChave(rede, tipo, projecao) {
+      const chaves = {
+        "0-MT-P": 1, "0-MT-N": 2, "0-MT-E": 3,
+        "0-BT-P": 13, "0-BT-N": 14, "0-BT-E": 15,
+        "1-MT-P": 4, "1-MT-N": 5, "1-MT-E": 6,
+        "1-BT-P": 16, "1-BT-N": 17, "1-BT-E": 18,
+        "2-MT-P": 7, "2-MT-N": 8, "2-MT-E": 9,
+        "2-BT-P": 19, "2-BT-N": 20, "2-BT-E": 21,
+        "3-MT-P": 10, "3-MT-N": 11, "3-MT-E": 12,
+        "3-BT-P": 22, "3-BT-N": 23, "3-BT-E": 24,
+        "4-MT-N": 25, "4-BT-N": 25,
+        "5-MT-N": 26, "5-BT-N": 26
+      };
+
+      return chaves[`${tipo}-${rede}-${projecao}`] ?? null;
+    }
+
+    function gerarCodigo() {
+      const especie = document.getElementById('especie').value.trim().toLowerCase();
+      const rede = document.getElementById('rede').value;
+      const projecao = document.getElementById('projecao').value;
+      const quantidade = parseInt(document.getElementById('quantidade').value);
+
+      if (!quantidade || quantidade <= 0) {
+        document.getElementById('resultado').innerText = "Preencha a quantidade corretamente.";
+        return;
+      }
+
+      const qtdStr = quantidade.toString().padStart(4, '0');
+      const tipo = tipoEspecial !== null ? tipoEspecial : tipos[especie];
+
+      if (tipo === undefined) {
+        document.getElementById('resultado').innerText = "Espécie não encontrada.";
+        return;
+      }
+
+      const gerar = (r) => {
+        const chave = gerarChave(r, tipo, projecao);
+        return chave ? chave.toString().padStart(2, '0') + "_" + qtdStr + "#" : null;
+      };
+
+      let codigo = "";
+      if (rede === "AMBOS") {
+        const bt = gerar("BT");
+        const mt = gerar("MT");
+        if (!bt || !mt) {
+          document.getElementById('resultado').innerText = "Combinação inválida.";
+          return;
+        }
+        codigo = `${bt} ${mt}`;
+      } else {
+        const chave = gerar(rede);
+        if (!chave) {
+          document.getElementById('resultado').innerText = "Combinação inválida.";
+          return;
+        }
+        codigo = chave;
+      }
+
+      document.getElementById('resultado').innerText = "Código gerado: " + codigo;
+
+      tipoEspecial = null;
+      document.getElementById('lbl-especie').style.display = 'block';
+      document.getElementById('especie').style.display = 'block';
+    }
+
+    function mostrarLista() {
+      const listaDiv = document.getElementById('listaEspecies');
+      listaDiv.innerHTML = "";
+      for (let nome in tipos) {
+        const item = document.createElement("div");
+        item.innerText = nome.charAt(0).toUpperCase() + nome.slice(1);
+        item.onclick = function () {
+          document.getElementById('especie').value = nome;
+          listaDiv.style.display = "none";
+        };
+        listaDiv.appendChild(item);
+      }
+      listaDiv.style.display = "block";
+    }
+  function gerarDistanciaSeguranca() {
+  document.getElementById('resultado').innerText = "Código gerado: 00_0000#";
+}
+  function limparCampos() {
+  document.getElementById('especie').value = '';
+  document.getElementById('rede').value = 'MT';
+  document.getElementById('projecao').value = 'P';
+  document.getElementById('quantidade').value = '';
+  document.getElementById('resultado').innerText = '';
+  document.getElementById('lbl-especie').style.display = 'block';
+  document.getElementById('especie').style.display = 'block';
+  tipoEspecial = null;
+}
+  </script>
+</body>
+</html>

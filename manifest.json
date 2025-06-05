@@ -1,0 +1,20 @@
+{
+  "name": "Gerador de Código de Poda",
+  "short_name": "PodaApp",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#e6f4ea",
+  "theme_color": "#2e7d32",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
